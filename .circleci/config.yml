@@ -30,6 +30,10 @@ jobs:
             --query 'Reservations[*].Instances[*].PublicIpAddress' \
             --filters "Name=tag:project,Values=udacity" \
             --output text >> ~/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths: 
+            - inventory.txt  
   
   configure_infrastructure: 
     docker:
@@ -53,10 +57,14 @@ jobs:
 workflows:
   my_workflow:
     jobs:
-      - create_infrastructure
-      - update_inventory:
-          requires:
-            - create_infrastructure      
+      # - create_infrastructure
+      # - update_inventory:
+      #     requires:
+      #       - create_infrastructure      
+      # - configure_infrastructure:
+      #     requires:
+      #       - update_inventory
+      - update_inventory     
       - configure_infrastructure:
           requires:
             - update_inventory
