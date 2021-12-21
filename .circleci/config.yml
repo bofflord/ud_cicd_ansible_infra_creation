@@ -17,6 +17,20 @@ jobs:
               --template-file template.yml \
               --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
               --region us-east-1
+  
+  update_inventory:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: 
+          name: list EC2 instance and save IP to inventory file
+          command: |
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:project,Values=udacity" \
+            --output text >> inventory.txt
+  
   configure_infrastructure: 
     docker:
       - image: python:3.7-alpine3.11
@@ -39,8 +53,10 @@ jobs:
 workflows:
   my_workflow:
     jobs:
-      # - create_infrastructure
-      # - configure_infrastructure:
-      #     requires:
-      #       - create_infrastructure
-      - configure_infrastructure
+      - create_infrastructure
+      - update_inventory:
+          requires:
+            - create_infrastructure      
+      - configure_infrastructure:
+          requires:
+            - update_inventory
